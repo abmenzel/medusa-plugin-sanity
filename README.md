@@ -25,13 +25,15 @@ This plugin assumes that the [Sanity File Plugin](https://github.com/abmenzel/me
 
 ## How to Install
 
-1\. Run the following command to install the plugin on your Medusa backend:
+1\. Copy the schemas from data/schemas to your Sanity project. (You can add to these schemas to suit your needs.)
+
+2\. Run the following command to install the plugin on your Medusa backend:
 
 ```bash
 yarn add medusa-plugin-sanity
 ```
 
-2\. Set the following environment variables in `.env`:
+3\. Set the following environment variables in `.env`:
 
 ```bash
   SANITY_PROJECT_ID=<YOUR_SANITY_PROJECT_ID>
