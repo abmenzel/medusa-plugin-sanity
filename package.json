@@ -1,21 +1,27 @@
 {
 	"name": "medusa-plugin-sanity",
 	"version": "1.0.0",
-	"description": "A starter for Medusa projects.",
-	"author": "Alexander Menzel <alexander@menzel.dk>",
+	"description": "Sanity CMS plugin for Medusa",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/abmenzel/medusa-plugin-sanity"
+	},
+	"author": {
+		"name": "Alexander Menzel",
+		"email": "alexander@hybl.dk",
+		"url": "https://hybl.dk"
+	},
 	"license": "MIT",
 	"keywords": [
-		"sqlite",
-		"postgres",
-		"typescript",
-		"ecommerce",
-		"headless",
-		"medusa"
+		"medusa-plugin",
+		"medusa-plugin-cms",
+		"medusa-plugin-sanity"
 	],
 	"scripts": {
 		"prepare": "cross-env NODE_ENV=production yarn run build",
-		"build": "babel src --out-dir . --extensions '.ts'",
-		"watch": "babel -w src --out-dir . --extensions '.ts'",
+		"build": "babel src --out-dir . --extensions '.ts' --ignore '**/__tests__,**/__mocks__'",
+		"watch": "babel src --out-dir . --extensions '.ts' --ignore '**/__tests__,**/__mocks__'",
 		"test": "jest"
 	},
 	"dependencies": {
@@ -60,7 +66,7 @@
 	"jest": {
 		"globals": {
 			"ts-jest": {
-				"tsconfig": "tsconfig.spec.json"
+				"tsconfig": "tsconfig.json"
 			}
 		},
 		"moduleFileExtensions": [
