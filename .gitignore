@@ -3,6 +3,10 @@
 .DS_Store
 /uploads
 /node_modules
+/services
+/api
+/subscribers
+/loaders
 yarn-error.log
 
 .idea
