@@ -1,0 +1,81 @@
+{
+	"name": "medusa-plugin-sanity",
+	"version": "0.0.1",
+	"description": "A starter for Medusa projects.",
+	"author": "Alexander Menzel <alexander@menzel.dk>",
+	"license": "MIT",
+	"keywords": [
+		"sqlite",
+		"postgres",
+		"typescript",
+		"ecommerce",
+		"headless",
+		"medusa"
+	],
+	"scripts": {
+		"prepare": "cross-env NODE_ENV=production yarn run build",
+		"build": "babel src --out-dir . --ignore **/__tests__ --extensions \".ts,.js\"",
+		"watch": "babel -w src --out-dir . --ignore **/__tests__ --extensions \".ts,.js\"",
+		"test": "jest"
+	},
+	"dependencies": {
+		"@babel/preset-typescript": "^7.21.4",
+		"@medusajs/cache-inmemory": "^1.8.0",
+		"@medusajs/cache-redis": "1.8.0",
+		"@medusajs/event-bus-local": "^1.8.0",
+		"@medusajs/event-bus-redis": "1.8.0",
+		"@medusajs/medusa": "1.8.0",
+		"@sanity/client": "^5.4.2",
+		"babel-preset-medusa-package": "^1.1.13",
+		"body-parser": "^1.19.0",
+		"cors": "^2.8.5",
+		"express": "^4.17.2",
+		"medusa-interfaces": "^1.3.6",
+		"typeorm": "0.3.11"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.14.3",
+		"@babel/core": "^7.14.3",
+		"@medusajs/medusa-js": "^2.0.0",
+		"@types/express": "^4.17.13",
+		"@types/jest": "^27.4.0",
+		"@types/node": "^17.0.8",
+		"axios": "^1.3.5",
+		"babel-preset-medusa-package": "^1.1.13",
+		"cross-env": "^5.2.1",
+		"dotenv": "^16.0.3",
+		"eslint": "^6.8.0",
+		"jest": "^27.3.1",
+		"mongoose": "^5.13.14",
+		"rimraf": "^3.0.2",
+		"ts-jest": "^27.0.7",
+		"ts-loader": "^9.2.6",
+		"typescript": "^4.5.2"
+	},
+	"jest": {
+		"globals": {
+			"ts-jest": {
+				"tsconfig": "tsconfig.spec.json"
+			}
+		},
+		"moduleFileExtensions": [
+			"js",
+			"json",
+			"ts"
+		],
+		"testPathIgnorePatterns": [
+			"/node_modules/",
+			"<rootDir>/node_modules/"
+		],
+		"rootDir": "src",
+		"testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|js)$",
+		"transform": {
+			".ts": "ts-jest"
+		},
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
+		"coverageDirectory": "./coverage",
+		"testEnvironment": "node"
+	}
+}
