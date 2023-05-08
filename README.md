@@ -61,9 +61,41 @@ plugins = [
 
 ---
 
+## Localization
+
+This plugin assumes that you are using Sanity's field-level localization. The Sanity schema that comes with the plugin is already set up to support this. The schema assumes enligsh as the default language, and this is the field that is synced with Medusa.
+
+---
+
+## Synchronization
+
+The plugin will sync the following fields from Medusa to Sanity on creation/update:
+
+-   `title`
+-   `subtitle`
+-   `description`
+-   `handle`
+-   `type`
+-   `tags`
+-   `collection`
+-   `thumbnail`
+-   `images`
+-   `variants`
+-   `options`
+
+The plugin will sync the following fields from Sanity to Medusa on update:
+
+-   `title`
+-   `subtitle`
+-   `handle`
+-   `thumbnail`
+
+Deleting a product in Medusa will also delete the corresponding document in Sanity, but not the other way around.
+
+---
+
 ## TODO
 
--   [ ] Add support for two-way sync
 -   [ ] Add support for automatically creating types in Sanity
 -   [ ] Add check for Sanity File Plugin
 -   [ ] Add check for correct types in Sanity

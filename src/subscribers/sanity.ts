@@ -1,4 +1,4 @@
-import { EventBusService, ProductVariantService } from '@medusajs/medusa'
+import { EventBusService } from '@medusajs/medusa'
 import SanityService from 'services/sanity'
 
 class SanitySubscriber {
@@ -8,6 +8,8 @@ class SanitySubscriber {
 	constructor({ sanityService, eventBusService }) {
 		this.sanityService_ = sanityService
 		this.eventBus_ = eventBusService
+
+		// Medusa -> Sanity sync
 
 		this.eventBus_.subscribe('product-variant.created', async (data) => {
 			await this.sanityService_.createProductVariantInSanity(data)
@@ -44,6 +46,15 @@ class SanitySubscriber {
 		this.eventBus_.subscribe('product-collection.deleted', async (data) => {
 			await this.sanityService_.deleteDocumentInSanity(data)
 		})
+
+		// Sanity -> Medusa sync
+
+		this.sanityService_
+			.getClient()
+			.listen('*[_type == "product"]')
+			.subscribe((update: any) => {
+				this.sanityService_.handleSanityProductUpdate(update)
+			})
 	}
 }
 export default SanitySubscriber

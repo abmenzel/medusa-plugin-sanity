@@ -4,25 +4,35 @@ import {
 	ProductService,
 	ProductVariantService,
 } from '@medusajs/medusa'
-import { SanityClient, createClient } from '@sanity/client'
+import { SanityClient, SanityDocument, createClient } from '@sanity/client'
 import { BaseService } from 'medusa-interfaces'
-import { createBlock } from './util/create-block'
-import { transformMedusaOptions, transformMedusaPrices } from './util/mappers'
 import { parse } from 'path'
+import { createBlock } from './util/create-block'
 import { createImageField } from './util/create-image-field'
+import { transformMedusaOptions, transformMedusaPrices } from './util/mappers'
+
+const IGNORE_THRESHOLD = 3 // seconds
 
 class SanityService extends BaseService {
 	private productService_: ProductService
 	private productVariantService_: ProductVariantService
 	private productCollectionService_: ProductCollectionService
-	private sanityClient: SanityClient
+	private cacheService_: any
+	public sanityClient: SanityClient
 
 	constructor(
-		{ productService, productCollectionService, productVariantService },
+		{
+			productService,
+			productCollectionService,
+			productVariantService,
+			cacheService,
+		},
 		options
 	) {
 		super()
 		this.productService_ = productService
+
+		this.cacheService_ = cacheService
 
 		this.productVariantService_ = productVariantService
 
@@ -35,6 +45,20 @@ class SanityService extends BaseService {
 			apiVersion: options.apiVersion,
 			useCdn: options.useCdn,
 		})
+	}
+
+	getClient() {
+		return this.sanityClient
+	}
+
+	async addIgnore_(id, side) {
+		const key = `${id}_ignore_${side}`
+		return await this.cacheService_.set(key, 1, IGNORE_THRESHOLD)
+	}
+
+	async shouldIgnore_(id, side) {
+		const key = `${id}_ignore_${side}`
+		return await this.cacheService_.get(key)
 	}
 
 	async getAllMedusaProducts() {
@@ -58,6 +82,16 @@ class SanityService extends BaseService {
 
 	async getImageInSanity(image: Image) {
 		const parsedUrl = parse(image.url)
+		const parsedId = `image-${parsedUrl.name}${parsedUrl.ext.replace(
+			'.',
+			'-'
+		)}`
+		const sanityImage = await this.sanityClient.getDocument(parsedId)
+		return sanityImage
+	}
+
+	async getImageInSanityByUrl(url: string) {
+		const parsedUrl = parse(url)
 		const parsedId = `image-${parsedUrl.name}${parsedUrl.ext.replace(
 			'.',
 			'-'
@@ -96,6 +130,7 @@ class SanityService extends BaseService {
 					],
 				}
 			)
+			console.log('Product with id', product.id, 'was created in Medusa')
 
 			const sanityVariants = medusaProduct.variants
 				? await Promise.all(
@@ -144,14 +179,21 @@ class SanityService extends BaseService {
 				}
 			}
 
-			if (medusaProduct.images) {
+			if (medusaProduct.thumbnail) {
+				const sanityImage = await this.getImageInSanityByUrl(
+					medusaProduct.thumbnail
+				)
+				if (sanityImage) {
+					sanityProductFields['thumbnail'] =
+						createImageField(sanityImage)
+				}
+			}
+
+			if (medusaProduct.images?.length > 0) {
 				const sanityImages = await this.getImagesInSanity(
 					medusaProduct.images
 				)
 				if (sanityImages.length > 0) {
-					sanityProductFields['thumbnail'] = createImageField(
-						sanityImages[0]
-					)
 					sanityProductFields['images'] = sanityImages.map(
 						(image) => {
 							return createImageField(image)
@@ -166,12 +208,18 @@ class SanityService extends BaseService {
 		}
 	}
 
-	// TODO: thumbnails
 	async updateProductInSanity(product) {
 		try {
 			const productEntry =
 				(await this.sanityClient.getDocument(product.id)) ||
 				(await this.createProductInSanity(product))
+
+			const ignore = await this.shouldIgnore_(product.id, 'sanity')
+			if (ignore) {
+				return Promise.resolve()
+			}
+
+			console.log('Product with id', product.id, 'was updated in Medusa')
 
 			const medusaProduct = await this.productService_.retrieve(
 				product.id,
@@ -211,7 +259,9 @@ class SanityService extends BaseService {
 					en: medusaProduct.subtitle,
 				},
 				description: {
-					en: createBlock(medusaProduct.description),
+					en: medusaProduct.description
+						? createBlock(medusaProduct.description)
+						: undefined,
 				},
 				handle: medusaProduct.handle,
 				type: medusaProduct.type?.value,
@@ -229,6 +279,28 @@ class SanityService extends BaseService {
 					_weak: true,
 				}
 			}
+
+			if (medusaProduct.thumbnail) {
+				const sanityImage = await this.getImageInSanityByUrl(
+					medusaProduct.thumbnail
+				)
+				if (sanityImage) {
+					updatedFields['thumbnail'] = createImageField(sanityImage)
+				}
+			}
+
+			if (medusaProduct.images?.length > 0) {
+				const sanityImages = await this.getImagesInSanity(
+					medusaProduct.images
+				)
+				if (sanityImages.length > 0) {
+					updatedFields['images'] = sanityImages.map((image) => {
+						return createImageField(image)
+					})
+				}
+			}
+
+			await this.addIgnore_(product.id, 'sanity')
 
 			return this.sanityClient
 				.patch(productEntry._id)
@@ -283,6 +355,11 @@ class SanityService extends BaseService {
 				}
 			)
 
+			const ignore = await this.shouldIgnore_(variant.id, 'sanity')
+			if (ignore) {
+				return Promise.resolve()
+			}
+
 			const updatedFields = {
 				title: {
 					en: medusaVariant.title,
@@ -295,6 +372,7 @@ class SanityService extends BaseService {
 					medusaVariant.options
 				),
 			}
+			await this.addIgnore_(variant.id, 'sanity')
 
 			return this.sanityClient
 				.patch(variantEntry._id)
@@ -335,12 +413,18 @@ class SanityService extends BaseService {
 
 	async updateCollectionInSanity(collection) {
 		try {
+			const ignore = await this.shouldIgnore_(collection.id, 'sanity')
+			if (ignore) {
+				return Promise.resolve()
+			}
 			const medusaCollection =
 				await this.productCollectionService_.retrieve(collection.id)
 
 			const existingCollection =
 				(await this.sanityClient.getDocument(medusaCollection.id)) ||
 				(await this.createCollectionInSanity(medusaCollection))
+
+			await this.addIgnore_(collection.id, 'sanity')
 
 			return this.sanityClient
 				.patch(existingCollection._id)
@@ -351,6 +435,38 @@ class SanityService extends BaseService {
 					handle: medusaCollection.handle,
 				})
 				.commit()
+		} catch (error) {
+			throw error
+		}
+	}
+
+	async handleSanityProductUpdate(sanityUpdate: any) {
+		const product: SanityDocument = sanityUpdate.result
+		if (sanityUpdate.documentId.includes('draft')) {
+			return Promise.resolve()
+		}
+		const medusaProductId = product._id
+		const ignore = await this.shouldIgnore_(medusaProductId, 'sanity')
+		if (ignore) {
+			return Promise.resolve()
+		}
+		console.log('Product with id', product._id, 'was updated in Sanity')
+		const update: any = {}
+
+		if (product.handle) update.handle = product.handle
+		if (product.title.en) update.title = product.title.en
+		if (product.subtitle.en) update.subtitle = product.subtitle.en
+		if (product.thumbnail) {
+			const sanityImage = await this.sanityClient.getDocument(
+				product.thumbnail.asset._ref
+			)
+			update.thumbnail = sanityImage.url
+		}
+
+		await this.addIgnore_(medusaProductId, 'medusa')
+
+		try {
+			await this.productService_.update(medusaProductId, update)
 		} catch (error) {
 			throw error
 		}
