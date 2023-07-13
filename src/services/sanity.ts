@@ -152,12 +152,15 @@ class SanityService extends BaseService {
 				_type: 'product',
 				_id: medusaProduct.id,
 				title: {
+					_type: 'localeString',
 					en: medusaProduct.title,
 				},
 				subtitle: {
+					_type: 'localeString',
 					en: medusaProduct.subtitle,
 				},
 				description: {
+					_type: 'localeBlock',
 					en: medusaProduct.description
 						? createBlock(medusaProduct.description)
 						: undefined,
@@ -253,12 +256,15 @@ class SanityService extends BaseService {
 
 			const updatedFields = {
 				title: {
+					_type: 'localeString',
 					en: medusaProduct.title,
 				},
 				subtitle: {
+					_type: 'localeString',
 					en: medusaProduct.subtitle,
 				},
 				description: {
+					_type: 'localeBlock',
 					en: medusaProduct.description
 						? createBlock(medusaProduct.description)
 						: undefined,
@@ -324,6 +330,7 @@ class SanityService extends BaseService {
 				_type: 'productVariant',
 				_id: medusaVariant.id,
 				title: {
+					_type: 'localeString',
 					en: medusaVariant.title,
 				},
 				sku: medusaVariant.sku,
