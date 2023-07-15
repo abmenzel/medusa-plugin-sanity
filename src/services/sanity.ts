@@ -107,7 +107,9 @@ class SanityService extends BaseService {
 				if (existingSanityImage) {
 					return existingSanityImage
 				} else {
-					console.error('Image not found in Sanity')
+					console.error(
+						`Image with id ${image.id} was not found in sanity`
+					)
 				}
 			})
 		)
@@ -130,7 +132,7 @@ class SanityService extends BaseService {
 					],
 				}
 			)
-			console.log('Product with id', product.id, 'was created in Medusa')
+			console.log('Product with id', product.id, 'was created in Sanity')
 
 			const sanityVariants = medusaProduct.variants
 				? await Promise.all(
@@ -221,8 +223,6 @@ class SanityService extends BaseService {
 			if (ignore) {
 				return Promise.resolve()
 			}
-
-			console.log('Product with id', product.id, 'was updated in Medusa')
 
 			const medusaProduct = await this.productService_.retrieve(
 				product.id,
@@ -457,7 +457,6 @@ class SanityService extends BaseService {
 		if (ignore) {
 			return Promise.resolve()
 		}
-		console.log('Product with id', product._id, 'was updated in Sanity')
 		const update: any = {}
 
 		if (product.handle) update.handle = product.handle
