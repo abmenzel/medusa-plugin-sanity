@@ -5,7 +5,7 @@ const product = {
 	fields: [
 		{
 			name: 'title',
-			type: 'localeString',
+			type: 'internationalizedArrayString',
 			title: 'Title',
 			validation: (Rule: any) => Rule.required(),
 		},
@@ -17,7 +17,7 @@ const product = {
 		},
 		{
 			name: 'subtitle',
-			type: 'localeString',
+			type: 'internationalizedArrayString',
 			title: 'Subtitle',
 		},
 		{
@@ -33,7 +33,7 @@ const product = {
 		},
 		{
 			name: 'description',
-			type: 'localeBlock',
+			type: 'internationalizedArrayString',
 			title: 'Description',
 		},
 		{
