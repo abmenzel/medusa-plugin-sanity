@@ -2,6 +2,10 @@
 
 Manage the content of your storefront with Sanity CMS.
 
+## From v1 to v2
+
+I've changed the plugin to use [internationalizedArrayString](https://github.com/sanity-io/sanity-plugin-internationalized-array) instead of `localeString` and `localeBlock` for any fields using that format. This means that you will have to migrate your existing data to the new format if you want to use v2.
+
 ## Features
 
 -   Handle the presentational content of your commerce application using Sanity.

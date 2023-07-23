@@ -7,8 +7,12 @@ import {
 import { SanityClient, SanityDocument, createClient } from '@sanity/client'
 import { BaseService } from 'medusa-interfaces'
 import { parse } from 'path'
-import { createBlock } from './util/create-block'
 import { createImageField } from './util/create-image-field'
+import {
+	createLocalizedStringArray,
+	mapUpdateToMedusa,
+	updateLocalizedStringArray,
+} from './util/localized-string-arrays'
 import { transformMedusaOptions, transformMedusaPrices } from './util/mappers'
 
 const IGNORE_THRESHOLD = 3 // seconds
@@ -153,20 +157,11 @@ class SanityService extends BaseService {
 			const sanityProductFields = {
 				_type: 'product',
 				_id: medusaProduct.id,
-				title: {
-					_type: 'localeString',
-					en: medusaProduct.title,
-				},
-				subtitle: {
-					_type: 'localeString',
-					en: medusaProduct.subtitle,
-				},
-				description: {
-					_type: 'localeBlock',
-					en: medusaProduct.description
-						? createBlock(medusaProduct.description)
-						: undefined,
-				},
+				title: createLocalizedStringArray(medusaProduct.title),
+				subtitle: createLocalizedStringArray(medusaProduct.subtitle),
+				description: createLocalizedStringArray(
+					medusaProduct.description
+				),
 				handle: medusaProduct.handle,
 				type: medusaProduct.type?.value,
 				tags: medusaProduct.tags?.map((tag) => tag.value) || [],
@@ -255,20 +250,18 @@ class SanityService extends BaseService {
 				: []
 
 			const updatedFields = {
-				title: {
-					_type: 'localeString',
-					en: medusaProduct.title,
-				},
-				subtitle: {
-					_type: 'localeString',
-					en: medusaProduct.subtitle,
-				},
-				description: {
-					_type: 'localeBlock',
-					en: medusaProduct.description
-						? createBlock(medusaProduct.description)
-						: undefined,
-				},
+				title: updateLocalizedStringArray(
+					productEntry.title,
+					medusaProduct.title
+				),
+				subtitle: updateLocalizedStringArray(
+					productEntry.subtitle,
+					medusaProduct.subtitle
+				),
+				description: updateLocalizedStringArray(
+					productEntry.description,
+					medusaProduct.description
+				),
 				handle: medusaProduct.handle,
 				type: medusaProduct.type?.value,
 				tags: medusaProduct.tags?.map((tag) => tag.value) || [],
@@ -329,10 +322,7 @@ class SanityService extends BaseService {
 			const sanityVariantFields = {
 				_type: 'productVariant',
 				_id: medusaVariant.id,
-				title: {
-					_type: 'localeString',
-					en: medusaVariant.title,
-				},
+				title: createLocalizedStringArray(medusaVariant.title),
 				sku: medusaVariant.sku,
 				inventory_quantity: medusaVariant.inventory_quantity,
 				prices: transformMedusaPrices(medusaVariant.prices),
@@ -368,9 +358,10 @@ class SanityService extends BaseService {
 			}
 
 			const updatedFields = {
-				title: {
-					en: medusaVariant.title,
-				},
+				title: updateLocalizedStringArray(
+					variantEntry.title,
+					variant.title
+				),
 				sku: medusaVariant.sku,
 				inventory_quantity: medusaVariant.inventory_quantity,
 				prices: transformMedusaPrices(medusaVariant.prices),
@@ -406,9 +397,7 @@ class SanityService extends BaseService {
 			const sanityCollection = await this.sanityClient.createOrReplace({
 				_type: 'productCollection',
 				_id: collection.id,
-				name: {
-					en: medusaCollection.title,
-				},
+				name: createLocalizedStringArray(medusaCollection.title),
 				handle: medusaCollection.handle,
 			})
 
@@ -436,9 +425,10 @@ class SanityService extends BaseService {
 			return this.sanityClient
 				.patch(existingCollection._id)
 				.set({
-					name: {
-						en: medusaCollection.title,
-					},
+					name: updateLocalizedStringArray(
+						existingCollection.name,
+						medusaCollection.title
+					),
 					handle: medusaCollection.handle,
 				})
 				.commit()
@@ -458,10 +448,12 @@ class SanityService extends BaseService {
 			return Promise.resolve()
 		}
 		const update: any = {}
-
 		if (product.handle) update.handle = product.handle
-		if (product.title.en) update.title = product.title.en
-		if (product.subtitle.en) update.subtitle = product.subtitle.en
+		if (product.title) update.title = mapUpdateToMedusa(product.title)
+		if (product.subtitle)
+			update.subtitle = mapUpdateToMedusa(product.subtitle)
+		if (product.description)
+			update.description = mapUpdateToMedusa(product.description)
 		if (product.thumbnail) {
 			const sanityImage = await this.sanityClient.getDocument(
 				product.thumbnail.asset._ref
