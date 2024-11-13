@@ -1,7 +1,5 @@
 ## This plugin is no longer maintained by the author
 
----
-
 # Sanity CMS
 
 Manage the content of your storefront with Sanity CMS.
