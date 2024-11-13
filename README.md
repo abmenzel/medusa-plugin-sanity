@@ -1,4 +1,4 @@
-## This plugin is no longer maintained by the author
+## !NOTE: This plugin is no longer maintained by the author
 
 # Sanity CMS
 
